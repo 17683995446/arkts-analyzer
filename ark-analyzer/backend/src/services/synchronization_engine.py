@@ -216,14 +216,14 @@ class SynchronizationEngine:
     ) -> UpdateResult:
         """删除文件数据"""
         try:
-            existing_file = await self.db.get_file_by_path(file_path)
+            async with self.db.transaction():
+                existing_file = await self.db.get_file_by_path(file_path)
 
-            if existing_file:
-                await self.db.execute(
-                    "DELETE FROM files WHERE path = ?",
-                    (file_path,)
-                )
-                await self.db.commit()
+                if existing_file:
+                    await self.db.execute(
+                        "DELETE FROM files WHERE path = ?",
+                        (file_path,)
+                    )
 
             duration_ms = int((time.time() - start_time) * 1000)
 
@@ -331,16 +331,16 @@ class SynchronizationEngine:
         """记录变更日志"""
         duration_ms = int((time.time() - start_time) * 1000)
 
-        await self.db.execute(
-            """
-            INSERT INTO change_logs (file_path, change_type, entities_count, duration_ms)
-            VALUES (?, ?, ?, ?)
-            """,
-            (
-                file_path,
-                change_type,
-                entities.classes + entities.methods,
-                duration_ms
+        async with self.db.transaction():
+            await self.db.execute(
+                """
+                INSERT INTO change_logs (file_path, change_type, entities_count, duration_ms)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    file_path,
+                    change_type,
+                    entities.classes + entities.methods,
+                    duration_ms
+                )
             )
-        )
-        await self.db.commit()

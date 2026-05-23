@@ -208,15 +208,19 @@ class SynchronizationEngine:
             parsed_file = self.parser.parse_file(file_path, content)
             logger.debug(f"[UPDATE_FILE_PARSED] 文件解析完成: {file_path}, classes={len(parsed_file.classes)}, functions={len(parsed_file.standalone_functions)}")
 
+            logger.debug(f"[UPDATE_FILE_CHECK_EXISTING] 在事务外查询现有文件: {file_path}")
+            existing_file = await self.db.get_file_by_path(file_path)
+            logger.debug(f"[UPDATE_FILE_EXISTING_FILE] 查询现有文件: {file_path}, exists={existing_file is not None}")
+            
+            existing_file_id = existing_file['id'] if existing_file else None
+
             logger.debug(f"[UPDATE_FILE_TRANSACTION] 开始数据库事务: {file_path}")
             async with self.db.transaction():
                 logger.debug(f"[UPDATE_FILE_TRANSACTION_START] 事务已开始: {file_path}")
-                existing_file = await self.db.get_file_by_path(file_path)
-                logger.debug(f"[UPDATE_FILE_EXISTING_FILE] 查询现有文件: {file_path}, exists={existing_file is not None}")
-
-                if existing_file:
-                    logger.debug(f"[UPDATE_FILE_DELETE_REL] 删除文件关系: {file_path}, file_id={existing_file['id']}")
-                    await self._delete_file_relationships(existing_file['id'])
+                
+                if existing_file_id:
+                    logger.debug(f"[UPDATE_FILE_DELETE_REL] 删除文件关系: {file_path}, file_id={existing_file_id}")
+                    await self._delete_file_relationships(existing_file_id)
                     logger.debug(f"[UPDATE_FILE_DELETE_REL_OK] 关系删除完成: {file_path}")
 
                 logger.debug(f"[UPDATE_FILE_INSERT] 插入实体: {file_path}")

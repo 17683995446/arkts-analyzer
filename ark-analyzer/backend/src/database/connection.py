@@ -127,6 +127,17 @@ class DatabaseConnection:
             
             CREATE INDEX IF NOT EXISTS idx_change_logs_time ON change_logs(created_at DESC);
             
+            CREATE TABLE IF NOT EXISTS extends_relations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                parent INTEGER NOT NULL,
+                child INTEGER NOT NULL,
+                FOREIGN KEY (parent) REFERENCES classes(id) ON DELETE CASCADE,
+                FOREIGN KEY (child) REFERENCES classes(id) ON DELETE CASCADE
+            );
+            
+            CREATE INDEX IF NOT EXISTS idx_extends_parent ON extends_relations(parent);
+            CREATE INDEX IF NOT EXISTS idx_extends_child ON extends_relations(child);
+            
             CREATE TABLE IF NOT EXISTS config (
                 key TEXT PRIMARY KEY,
                 value TEXT NOT NULL,

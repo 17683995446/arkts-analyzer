@@ -2,7 +2,7 @@
 ArkAnalyzer数据库连接管理模块
 文件名: connection.py
 用途: SQLite数据库连接池和事务管理
-版本: v5.0 - 增强日志版
+版本: v5.1 - 稳定版（无缓存，避免循环导入）
 """
 import asyncio
 import contextlib
